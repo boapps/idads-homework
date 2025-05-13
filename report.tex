@@ -1,0 +1,115 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{fontenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{float}
+\geometry{a4paper, margin=1in}
+
+\title{IDADS Homework Report: RAG Analysis}
+\author{redacted (\texttt{redacted})}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Technical Notes}
+
+I took the liberty of running the notebook on my local machine instead of using the Google Colaboratory. I also modified it to use a local model running on my computer as I could not get inference to work through the Huggingface API. While I was at it, I changed the prompting strategy from instruct style to chat style as I find it an archaic way of using LLMs. Pretty much all local models released recently are tuned for chat conversations.
+
+I used the \texttt{gemma-3-12b-it-qat-q4\_0} model in a local inference engine (based on llama.cpp) that exposes an OpenAI compatible API on port 5001. I ran it without the \texttt{.mmproj} file (no visual capabilities) to save on VRAM.
+
+As for the embeddings, I changed it to one that supports multilinguality since I planned to process Hungarian texts: \texttt{sentence-transformers/paraphrase-multilingual-mpnet-base-v2}.
+
+This all fit nicely on my RTX 3060 GPU which has 12 GB of VRAM.
+
+\section{Data}
+
+I used the \href{https://huggingface.co/datasets/K-Monitor/kmdb_base}{K-Monitor/kmdb\_base} dataset which is a HuggingFace mirror of K-Monitor's \href{https://adatbazis.k-monitor.hu/}{news database}. It contains high-quality news articles that focus on corruption and transparency handpicked by a selected group of volunteers.
+
+For the exercise I selected the 10 000 most recent articles, and wrote them to \texttt{.txt} files in the \texttt{data/} folder.
+
+\section{Examples of Errors in Generated Responses}
+
+Asking questions about news (especially recent events) can easily result in inaccurate or totally hallucinated answers. Even LLM systems that can access the web may use information that is inaccurate or not trustworthy.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\includegraphics[width=1\linewidth]{image2.png}}
+    \caption{ChatGPT's answer without search}
+    \label{fig:gpt}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \fbox{\includegraphics[width=1\linewidth]{image.png}}
+    \caption{ChatGPT-4o's answer using search}
+    \label{fig:gpt40}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \fbox{\includegraphics[width=1\linewidth]{gemini.png}}
+    \caption{gemini-2.5-flash-preview-04-17's answer without search}
+    \label{fig:gemini}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \fbox{\includegraphics[width=1\linewidth]{image.png}}
+    \caption{gemini-2.5-flash-preview-04-17's answer without search}
+    \label{fig:enter-label}
+\end{figure}
+
+Figures \ref{fig:gpt} and \ref{fig:gemini} show the model hallucinate and Figure \ref{fig:gpt40} show the model fail to answer the despite using it's search capabilities.
+
+\section{Comparison: Base vs. Retrieval}
+    Figure \ref{fig:finn} shows that RAG can greatly improve the output of the system using the sources listed in Figure \ref{fig:sources}. This demonstrates that by querying similar texts to the original question and feeding them to the model's system prompt can let the model use accurate information to answer the question. This relies on LLM's ability to heavily rely on their context for generating the output.
+
+    \begin{figure}[H]
+        \centering
+        \fbox{\includegraphics[width=1\linewidth]{Screenshot From 2025-05-13 14-39-38.png}}
+        \caption{The RAG system answers the question correctly while the base version hallucinates.}
+        \label{fig:finn}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \fbox{\includegraphics[width=1\linewidth]{Screenshot From 2025-05-13 14-39-57.png}}
+        \fbox{\includegraphics[width=1\linewidth]{Screenshot From 2025-05-13 14-40-09.png}}
+        \fbox{\includegraphics[width=1\linewidth]{Screenshot From 2025-05-13 14-40-18.png}}
+        \caption{Source documents used for answering}
+        \label{fig:sources}
+    \end{figure}
+
+    More experiments can be seen on Figures \ref{fig:zelcs} and \ref{fig:gyarfas}. The base model hallucinates a long but completely inaccurate description while the RAG version gives almost perfect answers.
+
+    \begin{figure}[H]
+        \centering
+        \fbox{\includegraphics[width=1\linewidth]{Screenshot From 2025-05-13 17-27-31.png}}
+        \caption{Question: "Mit kell tudni Zelcsényi Miklósról?"}
+        \label{fig:zelcs}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \fbox{\includegraphics[width=1\linewidth]{Screenshot From 2025-05-13 17-37-35.png}}
+        \caption{Question: "Mi bizonyítja, hogy Gyárfás Tamás bűnös?"}
+        \label{fig:gyarfas}
+    \end{figure}
+
+\section{Discussion}
+
+
+
+\section{Google Colab Notebook}
+    % Provide the link to your shared Google Colab notebook.
+    % The notebook should have cells executed and the two smaller tasks answered in the comments.
+    Link: \href{YOUR_COLAB_LINK_HERE}{Shared Google Colab Notebook}
+    % Remember to replace YOUR_COLAB_LINK_HERE with the actual link.
+
+\end{document}
